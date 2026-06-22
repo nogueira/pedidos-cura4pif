@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cura4pif - Pedido</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f7f6;
+      color: #102027;
+    }
+    .page {
+      min-height: 100vh;
+      padding: 28px 14px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .card {
+      width: 100%;
+      max-width: 820px;
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.10);
+      padding: 28px;
+    }
+    .brand { text-align: center; margin-bottom: 24px; }
+    .brand h1 {
+      margin: 0;
+      color: #117a72;
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 800;
+    }
+    .brand p { margin: 10px 0 0; color: #52666c; font-size: 16px; }
+    .section-title {
+      margin: 26px 0 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2eeee;
+      color: #117a72;
+      font-size: 22px;
+      font-weight: 900;
+    }
+    label {
+      display: block;
+      margin: 15px 0 6px;
+      font-weight: 700;
+      color: #203238;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 14px 15px;
+      border: 1px solid #cfd8dc;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+      background: #fff;
+    }
+    textarea { min-height: 86px; resize: vertical; }
+    input:focus, textarea:focus, select:focus {
+      border-color: #117a72;
+      box-shadow: 0 0 0 3px rgba(17,122,114,.14);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 14px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0 14px;
+    }
+    .cat-box {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid #dfe8e7;
+      border-radius: 16px;
+      background: #fbfdfd;
+    }
+    .cat-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-weight: 800;
+      color: #117a72;
+      font-size: 18px;
+    }
+    .remove-btn {
+      display: none;
+      border: none;
+      background: #b00020;
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .cat-box.extra .remove-btn { display: inline-block; }
+    .add-btn {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      border: 2px dashed #117a72;
+      background: #eef9f7;
+      color: #117a72;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .submit-btn {
+      width: 100%;
+      margin-top: 24px;
+      border: none;
+      border-radius: 18px;
+      padding: 22px 18px;
+      background: #117a72;
+      color: white;
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .submit-btn:disabled { opacity: .65; cursor: wait; }
+    .message {
+      display: none;
+      margin-top: 18px;
+      padding: 15px;
+      border-radius: 12px;
+      font-weight: 800;
+      text-align: center;
+    }
+    .message.ok { display: block; background: #e7f7ee; color: #116b37; }
+    .message.err { display: block; background: #fde8e8; color: #a40000; }
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      padding: 20px;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    .modal {
+      width: 100%;
+      max-width: 720px;
+      max-height: 90vh;
+      overflow: auto;
+      background: #fff;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.25);
+    }
+    .summary {
+      background: #f6fbfa;
+      border: 1px solid #dfe8e7;
+      border-radius: 14px;
+      padding: 16px;
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .secondary-btn {
+      border: 1px solid #b7c9c7;
+      background: #fff;
+      color: #203238;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .confirm-btn {
+      border: none;
+      background: #117a72;
+      color: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .hint {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #60767c;
+    }
+    @media (max-width: 620px) {
+      .card { padding: 20px; }
+      .brand h1 { font-size: 34px; }
+      .submit-btn { font-size: 24px; }
+      .grid, .grid-3, .modal-actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="brand">
+        <h1>cura4pif</h1>
+        <p>Formulário de pedido</p>
+      </div>
+
+      <form id="pedidoForm">
+        <div class="section-title">Dados do cliente</div>
+
+        <label for="nome">Nome completo</label>
+        <input id="nome" name="nome" type="text" required />
+
+        <div class="grid">
+          <div>
+            <label for="cpf">CPF</label>
+            <input id="cpf" name="cpf" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required />
+          </div>
+          <div>
+            <label for="telefone">Telefone / WhatsApp</label>
+            <input id="telefone" name="telefone" type="tel" inputmode="tel" maxlength="15" placeholder="(00) 00000-0000" required />
+          </div>
+        </div>
+
+        <div class="section-title">Endereço de entrega</div>
+
+        <div class="grid-3">
+          <div>
+            <label for="cep">CEP</label>
+            <input id="cep" name="cep" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" required />
+          </div>
+          <div>
+            <label for="estado">Estado</label>
+            <input id="estado" name="estado" type="text" maxlength="2" placeholder="SP" required />
+          </div>
+          <div>
+            <label for="cidade">Cidade</label>
+            <input id="cidade" name="cidade" type="text" required />
+          </div>
+        </div>
+
+        <label for="rua">Rua / Avenida</label>
+        <input id="rua" name="rua" type="text" required />
+
+        <div class="grid">
+          <div>
+            <label for="numero">Número</label>
+            <input id="numero" name="numero" type="text" required />
+          </div>
+          <div>
+            <label for="bairro">Bairro</label>
+            <input id="bairro" name="bairro" type="text" required />
+          </div>
+        </div>
+
+        <label for="complemento">Complemento</label>
+        <input id="complemento" name="complemento" type="text" placeholder="Apto, bloco, referência ou escreva Sem complemento" required />
+
+        <div class="section-title">Gatinhos e doses</div>
+
+        <div id="gatos">
+          <div class="cat-box">
+            <div class="cat-title">
+              <span>Gatinho 1</span>
+              <button type="button" class="remove-btn" onclick="removerGatinho(this)">Remover</button>
+            </div>
+
+            <label>Nome do gatinho</label>
+            <input name="nome_gatinho" type="text" required />
+
+            <div class="grid">
+              <div>
+                <label>Dose do remédio</label>
+                <input name="dose_remedio" type="text" placeholder="Ex.: 50 mg" required />
+              </div>
+              <div>
+                <label>Peso do gatinho</label>
+                <input name="peso_gatinho" type="text" placeholder="Ex.: 3,2 kg" required />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="add-btn" onclick="adicionarGatinho()">+ Adicionar outro gatinho</button>
+
+        <button id="submitBtn" type="submit" class="submit-btn">Finalizar pedido</button>
+
+        <div id="msg" class="message"></div>
+      </form>
+    </section>
+  </main>
+
+  <div id="modalResumo" class="modal-backdrop">
+    <div class="modal">
+      <h2>Confira o pedido antes de enviar</h2>
+      <div id="resumoPedido" class="summary"></div>
+      <div class="modal-actions">
+        <button type="button" class="secondary-btn" onclick="fecharResumo()">Editar pedido</button>
+        <button type="button" class="confirm-btn" onclick="confirmarEnvio()">Confirmar e enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycKtazGXRl1BkrKahcA3ukB-G-pHztUfJfwEFIWAyPgn2Xy8nu3pJH4Fjr5DNEa6B8/exec";
+    let dadosPendentes = null;
+
+    function somenteNumeros(valor) {
+      return valor.replace(/\D/g, "");
+    }
+
+    function mascaraCPF(valor) {
+      const v = somenteNumeros(valor).slice(0, 11);
+      return v
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    }
+
+    function mascaraTelefone(valor) {
+      const v = somenteNumeros(valor).slice(0, 11);
+      if (v.length <= 10) {
+        return v.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
+      }
+      return v.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
+    }
+
+    function mascaraCEP(valor) {
+      return somenteNumeros(valor).slice(0, 8).replace(/(\d{5})(\d)/, "$1-$2");
+    }
+
+    document.getElementById("cpf").addEventListener("input", e => e.target.value = mascaraCPF(e.target.value));
+    document.getElementById("telefone").addEventListener("input", e => e.target.value = mascaraTelefone(e.target.value));
+    document.getElementById("cep").addEventListener("input", e => e.target.value = mascaraCEP(e.target.value));
+    document.getElementById("estado").addEventListener("input", e => e.target.value = e.target.value.toUpperCase().slice(0,2));
+
+    function atualizarTitulos() {
+      document.querySelectorAll(".cat-box").forEach((box, index) => {
+        box.querySelector(".cat-title span").textContent = "Gatinho " + (index + 1);
+      });
+    }
+
+    function adicionarGatinho() {
+      const base = document.querySelector(".cat-box");
+      const novo = base.cloneNode(true);
+      novo.classList.add("extra");
+      novo.querySelectorAll("input").forEach(input => input.value = "");
+      document.getElementById("gatos").appendChild(novo);
+      atualizarTitulos();
+    }
+
+    function removerGatinho(btn) {
+      btn.closest(".cat-box").remove();
+      atualizarTitulos();
+    }
+
+    function coletarDados() {
+      const gatos = Array.from(document.querySelectorAll(".cat-box")).map(box => {
+        return {
+          nome: box.querySelector('input[name="nome_gatinho"]').value.trim(),
+          dose: box.querySelector('input[name="dose_remedio"]').value.trim(),
+          peso: box.querySelector('input[name="peso_gatinho"]').value.trim()
+        };
+      });
+
+      return {
+        nome: document.getElementById("nome").value.trim(),
+        cpf: document.getElementById("cpf").value.trim(),
+        telefone: document.getElementById("telefone").value.trim(),
+        endereco: {
+          cep: document.getElementById("cep").value.trim(),
+          rua: document.getElementById("rua").value.trim(),
+          numero: document.getElementById("numero").value.trim(),
+          complemento: document.getElementById("complemento").value.trim(),
+          bairro: document.getElementById("bairro").value.trim(),
+          cidade: document.getElementById("cidade").value.trim(),
+          estado: document.getElementById("estado").value.trim()
+        },
+        gatos: gatos
+      };
+    }
+
+    function textoResumo(dados) {
+      let txt = "";
+      txt += "Cliente: " + dados.nome + "\n";
+      txt += "CPF: " + dados.cpf + "\n";
+      txt += "Telefone/WhatsApp: " + dados.telefone + "\n\n";
+      txt += "Endereço:\n";
+      txt += dados.endereco.rua + ", " + dados.endereco.numero + "\n";
+      if (dados.endereco.complemento) txt += "Complemento: " + dados.endereco.complemento + "\n";
+      txt += "Bairro: " + dados.endereco.bairro + "\n";
+      txt += "Cidade/UF: " + dados.endereco.cidade + "/" + dados.endereco.estado + "\n";
+      txt += "CEP: " + dados.endereco.cep + "\n\n";
+      txt += "Gatinhos:\n";
+      dados.gatos.forEach((gato, i) => {
+        txt += "\n" + (i + 1) + ". " + gato.nome + "\n";
+        txt += "Dose: " + gato.dose + "\n";
+        txt += "Peso: " + gato.peso + "\n";
+      });
+      return txt;
+    }
+
+    function fecharResumo() {
+      document.getElementById("modalResumo").style.display = "none";
+    }
+
+    function validarTodosOsDados(dados) {
+      const campos = [
+        ["Nome completo", dados.nome],
+        ["CPF", dados.cpf],
+        ["Telefone/WhatsApp", dados.telefone],
+        ["CEP", dados.endereco.cep],
+        ["Rua", dados.endereco.rua],
+        ["Número", dados.endereco.numero],
+        ["Complemento", dados.endereco.complemento],
+        ["Bairro", dados.endereco.bairro],
+        ["Cidade", dados.endereco.cidade],
+        ["Estado", dados.endereco.estado]
+      ];
+
+      for (const [nome, valor] of campos) {
+        if (!valor || !valor.trim()) {
+          alert("Preencha o campo obrigatório: " + nome);
+          return false;
+        }
+      }
+
+      if (somenteNumeros(dados.cpf).length !== 11) {
+        alert("Preencha o CPF completo com 11 números.");
+        return false;
+      }
+
+      if (somenteNumeros(dados.telefone).length < 10) {
+        alert("Preencha um telefone/WhatsApp válido.");
+        return false;
+      }
+
+      if (somenteNumeros(dados.endereco.cep).length !== 8) {
+        alert("Preencha o CEP completo com 8 números.");
+        return false;
+      }
+
+      if (dados.endereco.estado.length !== 2) {
+        alert("Preencha o Estado com 2 letras, por exemplo SP.");
+        return false;
+      }
+
+      for (let i = 0; i < dados.gatos.length; i++) {
+        const gato = dados.gatos[i];
+        if (!gato.nome || !gato.dose || !gato.peso) {
+          alert("Preencha todos os dados do Gatinho " + (i + 1) + ".");
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    document.getElementById("pedidoForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const form = document.getElementById("pedidoForm");
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      dadosPendentes = coletarDados();
+
+      if (!validarTodosOsDados(dadosPendentes)) {
+        return;
+      }
+
+      document.getElementById("resumoPedido").textContent = textoResumo(dadosPendentes);
+      document.getElementById("modalResumo").style.display = "flex";
+    });
+
+    async function confirmarEnvio() {
+      const msg = document.getElementById("msg");
+      const btn = document.getElementById("submitBtn");
+      msg.className = "message";
+      msg.textContent = "";
+
+      fecharResumo();
+      btn.disabled = true;
+      btn.textContent = "Enviando...";
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(dadosPendentes)
+        });
+
+        msg.className = "message ok";
+        msg.textContent = "Pedido enviado com sucesso!";
+        document.getElementById("pedidoForm").reset();
+        document.querySelectorAll(".cat-box.extra").forEach(el => el.remove());
+        atualizarTitulos();
+      } catch (err) {
+        msg.className = "message err";
+        msg.textContent = "Não foi possível enviar. Verifique a conexão e tente novamente.";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Finalizar pedido";
+      }
+    }
+  </script>
+</body>
+</html>
